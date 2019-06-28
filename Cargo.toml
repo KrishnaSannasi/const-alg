@@ -1,0 +1,6 @@
+[workspace]
+
+members = [
+    'array-vec',
+    'const-alg'
+]
