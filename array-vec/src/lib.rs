@@ -208,12 +208,16 @@ impl<T, const N: usize> Iterator for IntoIter<T, { N }> {
     fn nth(&mut self, n: usize) -> Option<T> {
         match self.idx.checked_add(n) {
             Some(idx) if idx < self.arr.len => {
-                unsafe { std::ptr::drop_in_place(&mut self.arr[self.idx..idx]); }
+                unsafe {
+                    std::ptr::drop_in_place(&mut self.arr[self.idx..idx]);
+                }
                 self.idx = idx;
                 self.next()
-            },
+            }
             _ => {
-                unsafe { std::ptr::drop_in_place(&mut self.arr[self.idx..]); }
+                unsafe {
+                    std::ptr::drop_in_place(&mut self.arr[self.idx..]);
+                }
                 self.idx = self.arr.len;
                 None
             }
@@ -236,12 +240,16 @@ impl<T, const N: usize> DoubleEndedIterator for IntoIter<T, { N }> {
     fn nth_back(&mut self, n: usize) -> Option<T> {
         match self.arr.len.checked_sub(n) {
             Some(len) if self.idx < len => {
-                unsafe { std::ptr::drop_in_place(&mut self.arr[len..]); }
+                unsafe {
+                    std::ptr::drop_in_place(&mut self.arr[len..]);
+                }
                 self.arr.len = len;
                 self.next_back()
-            },
+            }
             _ => {
-                unsafe { std::ptr::drop_in_place(&mut self.arr[self.idx..]); }
+                unsafe {
+                    std::ptr::drop_in_place(&mut self.arr[self.idx..]);
+                }
                 self.idx = self.arr.len;
                 None
             }
