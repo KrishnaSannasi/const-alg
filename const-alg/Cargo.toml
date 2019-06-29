@@ -1,6 +1,6 @@
 [package]
 name = "const-alg"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Ozaren <krishna.sd.2012@gmail.com>"]
 edition = "2018"
 description = 'A library that provides a safe experimental linear algebra library based on arrays intead of on the heap'

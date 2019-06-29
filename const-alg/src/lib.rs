@@ -1,5 +1,23 @@
 #![feature(const_generics, specialization, existential_type)]
 #![allow(unused_unsafe)]
+// #![forbid(missing_docs)]
+
+/*!
+ * const-alg
+ * 
+ * This is an experimental linear algebra library that is backed by arrays!
+ * 
+ * The syntax for an matrix is just,
+ * 
+ * ```rust
+ * let m = Matrix(
+ *      [[0, 1, 2],
+ *       [3, 4, 5]]
+ * );
+ * ```
+ * 
+ * For a 2x3 matrix! This will work with any number of rows and columns!
+ */
 
 use std::ops::{
     Add, AddAssign, Deref, DerefMut, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Neg, Sub,
@@ -9,7 +27,7 @@ use std::ops::{
 use array_vec::ArrayVec;
 use num::{One, Zero};
 
-mod iter;
+pub mod iter;
 mod mul;
 
 mod zip_with;
@@ -32,7 +50,7 @@ fn into_iter<T, const N: usize>(arr: [T; N]) -> array_vec::IntoIter<T, { N }> {
 }
 
 cfg_if::cfg_if! {
-    if #[cfg(any(test, debug_assertions))] {
+    if #[cfg(any(debug_assertions))] {
         use std::convert::TryInto;
 
         // This branch panics if something goes wrong, and is perfectly safe
@@ -78,8 +96,32 @@ cfg_if::cfg_if! {
     }
 }
 
+/// A Square Matrix represents an `N x N` matrix stored in row-major order
+/// 
+/// So when you go to make it, you can just do
+/// 
+/// ```
+/// Matrix(
+///     [[0, 1],
+///      [3, 4]]
+/// )
+/// ```
+/// 
+/// And Rust will take care of the rest!
 pub type SquareMatrix<T, const N: usize> = Matrix<T, { N }, { N }>;
 
+/// Matrix represents an `N x M` matrix stored in row-major order
+/// 
+/// So when you go to make it, you can just do
+/// 
+/// ```
+/// Matrix(
+///     [[0, 1, 2],
+///      [3, 4, 5]]
+/// )
+/// ```
+/// 
+/// And Rust will take care of the rest!
 #[repr(transparent)]
 #[derive(Clone, Copy)]
 pub struct Matrix<T, const N: usize, const M: usize>(pub [[T; M]; N]);
@@ -285,7 +327,7 @@ where
 }
 
 cfg_if::cfg_if! {
-    if #[cfg(any(test, debug_assertions))] {
+    if #[cfg(any(debug_assertions))] {
 
         impl<T, const N: usize, const M: usize> Matrix<T, { N }, { M }> {
             fn check_bounds(&self, row: usize, col: usize) {
@@ -305,15 +347,24 @@ cfg_if::cfg_if! {
 }
 
 impl<T, const N: usize, const M: usize> Matrix<T, { N }, { M }> {
+    /// Transposes the matrix,
+    /// 
+    /// This is some sugar for transpose
     #[allow(non_snake_case)]
     pub fn T(self) -> Matrix<T, { M }, { N }> {
         self.transpose()
     }
 
+    /// Does the matrix transpose of the given matrix
+    /// 
+    /// Every element `matrix[(row, col)]` will be taken to `output[(col, row)]`
     pub fn transpose(self) -> Matrix<T, { M }, { N }> {
         unsafe { collect_mat(self.into_cols().map(|col| collect_array(col))) }
     }
 
+    /// Gets an element from the matrix
+    /// 
+    /// If the row or col is out of bounds, None is returned
     pub fn get(&self, row: usize, col: usize) -> Option<&T> {
         if row < N && col < M {
             Some(&self.0[row][col])
@@ -322,6 +373,9 @@ impl<T, const N: usize, const M: usize> Matrix<T, { N }, { M }> {
         }
     }
 
+    /// Gets an element from the matrix
+    /// 
+    /// If the row or col is out of bounds, None is returned
     pub fn get_mut(&mut self, row: usize, col: usize) -> Option<&mut T> {
         if row < N && col < M {
             Some(&mut self.0[row][col])
@@ -330,16 +384,40 @@ impl<T, const N: usize, const M: usize> Matrix<T, { N }, { M }> {
         }
     }
 
+    /// Gets an element from the matrix
+    /// 
+    /// If the row or col is out of bounds, this causes UB on release mode, and panics on debug mode
     pub unsafe fn get_unchecked(&self, row: usize, col: usize) -> &T {
         self.check_bounds(row, col);
+        
         self.0.get_unchecked(row).get_unchecked(col)
     }
 
+    /// Gets an element from the matrix
+    /// 
+    /// If the row or col is out of bounds, this causes UB on release mode, and panics on debug mode
     pub unsafe fn get_unchecked_mut(&mut self, row: usize, col: usize) -> &mut T {
         self.check_bounds(row, col);
+
         self.0.get_unchecked_mut(row).get_unchecked_mut(col)
     }
 
+    /// Get's all of the elements specified by the array,
+    /// 
+    /// If there are any duplicates, the first one will return a value and the rest will be None,
+    /// 
+    /// If any pos is out of bounds, it will result in None
+    /// 
+    /// Example,
+    /// 
+    /// ```
+    /// let m = Matrix(
+    ///     [[0, 1, 2],
+    ///      [3, 4, 5]]
+    /// );
+    /// 
+    /// assert_eq!(m.get_all_mut([(0, 0), (0, 2), (2, 0), (0, 0)]), [Some(&mut 0), Some(&mut 2), None, None]);
+    /// ```
     pub fn get_all_mut<const P: usize>(&mut self, pos: [(usize, usize); P]) -> [Option<&mut T>; P] {
         let pos = ArrayVec::<(usize, usize), { P }>::from(pos);
 

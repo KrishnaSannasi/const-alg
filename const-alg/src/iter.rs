@@ -6,25 +6,34 @@ use std::slice::{Iter, IterMut};
 
 use std::iter::FusedIterator;
 
+/// `IntoLine` is an iterator that represents either a row or a column
+/// 
+/// If this was aquired from `IntoRows`, then it is a row,
+/// If this was aquired from `IntoCols`, then it is a column,
 #[derive(Clone)]
 pub struct IntoLine<T, const N: usize>(IntoIter<T, { N }>);
 
+/// An iterator over the rows of a matrix
 #[derive(Clone)]
 pub struct IntoRows<T, const N: usize, const M: usize> {
     inner: IntoIter<[T; M], { N }>,
 }
 
+/// An iterator over the columns of a matrix
 #[derive(Clone)]
 pub struct IntoCols<T, const N: usize, const M: usize> {
     arr: ArrayVec<IntoIter<T, { M }>, { N }>,
 }
 
+/// An iterator over the unique references to a single row of a matrix
 pub struct RowMut<'a, T, const N: usize, const M: usize>(IterMut<'a, T>);
 
+/// An iterator over the unique references to rows  of a matrix
 pub struct RowsMut<'a, T, const N: usize, const M: usize> {
     inner: IterMut<'a, [T; M]>,
 }
 
+/// An iterator over the unique references to a single column of a matrix
 pub struct ColMut<'a, T, const N: usize, const M: usize> {
     inner: *mut [[T; M]; N],
     col: usize,
@@ -33,6 +42,7 @@ pub struct ColMut<'a, T, const N: usize, const M: usize> {
     lt: PhantomData<&'a mut [[T; M]; N]>,
 }
 
+/// An iterator over the unique references to the columns of a matrix
 pub struct ColsMut<'a, T, const N: usize, const M: usize> {
     inner: *mut [[T; M]; N],
     col: usize,
@@ -40,12 +50,15 @@ pub struct ColsMut<'a, T, const N: usize, const M: usize> {
     lt: PhantomData<&'a mut [[T; M]; N]>,
 }
 
+/// An iterator over the shared references to a single row of a matrix
 pub struct Row<'a, T, const N: usize, const M: usize>(Iter<'a, T>);
 
+/// An iterator over the shared references to rows  of a matrix
 pub struct Rows<'a, T, const N: usize, const M: usize> {
     inner: Iter<'a, [T; M]>,
 }
 
+/// An iterator over the shared references to a single column of a matrix
 pub struct Col<'a, T, const N: usize, const M: usize> {
     inner: &'a [[T; M]; N],
     col: usize,
@@ -53,6 +66,7 @@ pub struct Col<'a, T, const N: usize, const M: usize> {
     row_end: usize,
 }
 
+/// An iterator over the shared references to the columns of a matrix
 pub struct Cols<'a, T, const N: usize, const M: usize> {
     inner: &'a [[T; M]; N],
     col: usize,
@@ -579,24 +593,28 @@ impl<'a, T, const N: usize, const M: usize> ExactSizeIterator for Cols<'a, T, { 
 impl<'a, T, const N: usize, const M: usize> FusedIterator for Cols<'a, T, { N }, { M }> {}
 
 impl<T, const N: usize, const M: usize> Matrix<T, { N }, { M }> {
+    /// Consumes the matrix and iterates over its rows
     pub fn into_rows(self) -> IntoRows<T, { N }, { M }> {
         IntoRows {
             inner: into_iter(self.0),
         }
     }
 
+    /// Consumes the matrix and iterates over its columns
     pub fn into_cols(self) -> IntoCols<T, { N }, { M }> {
         IntoCols {
             arr: into_iter(self.0).map(into_iter).collect(),
         }
     }
 
+    /// iterates over unique references to rows of a matrix
     pub fn rows_mut(&mut self) -> RowsMut<T, { N }, { M }> {
         RowsMut {
             inner: self.0.iter_mut(),
         }
     }
 
+    /// iterates over unique references to columns of a matrix
     pub fn cols_mut(&mut self) -> ColsMut<T, { N }, { M }> {
         ColsMut {
             inner: &mut self.0,
@@ -606,12 +624,14 @@ impl<T, const N: usize, const M: usize> Matrix<T, { N }, { M }> {
         }
     }
 
+    /// iterates over shared references to rows of a matrix
     pub fn rows(&self) -> Rows<T, { N }, { M }> {
         Rows {
             inner: self.0.iter(),
         }
     }
 
+    /// iterates over shared references to columns of a matrix
     pub fn cols(&self) -> Cols<T, { N }, { M }> {
         Cols {
             inner: &self.0,

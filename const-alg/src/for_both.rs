@@ -1,5 +1,9 @@
 use crate::{into_iter, Matrix};
 
+/// Calls a function eagerly on all elements of two matricies
+/// 
+/// This takes a secondary matrix, and a function that accepts two arguments,
+/// elements into each matrix, and calls the function with all of the corrosponding elements of each matrix
 pub trait ForBoth<RHS, F> {
     fn for_both(self, other: RHS, f: F);
 }

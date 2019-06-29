@@ -1,5 +1,8 @@
 use crate::{into_iter, Matrix};
 
+/// Calls a function eagerly on all elements of a matrix
+/// 
+/// This takes a function that accepts items from the matrix, and calls it on all elements of the matrix
 pub trait ForEach<F> {
     fn for_each(self, f: F);
 }

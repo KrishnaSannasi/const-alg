@@ -1,5 +1,12 @@
 use crate::{collect_array, collect_mat, into_iter, ForBoth, Matrix};
 
+/// Zips the matrix eagerly with the given function
+/// 
+/// Similar to Haskell's [zipWith](https://hoogle.haskell.org/?hoogle=zipWith)
+/// 
+/// This takes a secondary matrix, and a function that accepts two arguments,
+/// elements into each matrix, and calls the function with all of the corrosponding elements of each matrix
+/// and produces a matrix of the result 
 pub trait ZipWith<RHS, F> {
     type Output;
 

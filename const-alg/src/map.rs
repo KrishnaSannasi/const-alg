@@ -1,5 +1,8 @@
 use crate::{collect_array, collect_mat, into_iter, ForEach, Matrix};
 
+/// Maps the matrix eagerly with the given function
+/// 
+/// This takes a function that accepts a elements of the matrix and produces a new matrix from the result of the map
 pub trait Map<F> {
     type Output;
 
