@@ -7,11 +7,14 @@ use std::ops::{Deref, DerefMut};
 #[cfg(test)]
 mod test;
 
+
+/// An array backed fixed capcity vector
 pub struct ArrayVec<T, const N: usize> {
     arr: MaybeUninit<[T; N]>,
     len: usize,
 }
 
+/// Creates a new empty array
 impl<T, const N: usize> Default for ArrayVec<T, { N }> {
     fn default() -> Self {
         ArrayVec {
@@ -22,22 +25,29 @@ impl<T, const N: usize> Default for ArrayVec<T, { N }> {
 }
 
 impl<T, const N: usize> ArrayVec<T, { N }> {
+    /// The pointer to the start of the array, only valid to read for `self.len()` elements
+    /// 
+    /// This pointer is not valid to write to, use `as_mut_ptr` instead
     pub fn as_ptr(&self) -> *const T {
         self.arr.as_ptr() as *const T
     }
-
+    
+    /// The pointer to the start of the array, only valid to read for `self.len()` elements, and to write for N elements
     pub fn as_mut_ptr(&mut self) -> *mut T {
         self.arr.as_mut_ptr() as *mut T
     }
 
+    /// As a shared reference to a slice
     pub fn as_slice(&self) -> &[T] {
         self
     }
 
+    /// As a unique reference to a slice
     pub fn as_mut_slice(&mut self) -> &mut [T] {
         self
     }
 
+    /// Puts an element onto the end of the `ArrayVec`
     pub fn push(&mut self, value: T) -> Result<(), T> {
         if self.len < N {
             unsafe {
@@ -50,6 +60,7 @@ impl<T, const N: usize> ArrayVec<T, { N }> {
         }
     }
 
+    /// Removes the last element from the `ArrayVec`
     pub fn pop(&mut self) -> Option<T> {
         if N == 0 {
             return None;
@@ -59,18 +70,22 @@ impl<T, const N: usize> ArrayVec<T, { N }> {
         unsafe { Some(self.as_ptr().add(self.len).read()) }
     }
 
+    /// The length of the `ArrayVec`
     pub fn len(&self) -> usize {
         self.len
     }
 
-    fn clear(&mut self) {
+    /// Removes all elements from the `ArrayVec`
+    pub fn clear(&mut self) {
         unsafe {
             std::ptr::drop_in_place(self.as_mut_slice());
         }
         self.len = 0;
     }
 
+    /// Convert to an array, not checked in release mode and will panic in debug mode
     pub unsafe fn into_array_unchecked(mut self) -> [T; N] {
+        debug_assert_eq!(self.len, N);
         self.len = 0;
         std::mem::replace(&mut self.arr, MaybeUninit::uninit()).assume_init()
     }
@@ -149,6 +164,7 @@ impl<T, const N: usize> IntoIterator for ArrayVec<T, { N }> {
     }
 }
 
+/// An iterator over the elements of a `ArrayVec`
 pub struct IntoIter<T, const N: usize> {
     arr: ManuallyDrop<ArrayVec<T, { N }>>,
     idx: usize,
