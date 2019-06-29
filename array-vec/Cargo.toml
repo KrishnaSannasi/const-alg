@@ -3,6 +3,8 @@ name = "array-vec"
 version = "0.1.0"
 authors = ["Ozaren <krishna.sd.2012@gmail.com>"]
 edition = "2018"
+description = 'A library that provides a minimal Vec<T> that is backed by an array, instead of on the heap'
+license = 'MIT'
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
