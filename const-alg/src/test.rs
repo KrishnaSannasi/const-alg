@@ -27,6 +27,8 @@ fn test_mul() {
 
     assert_eq!(Matrix([[1, 1]]) * m, Matrix([[45, 65]]));
 
+    assert_eq!(-m, Matrix([[-15, -20], [-30, -45]]));
+
     m *= Matrix::<_, 2, 2>::zero();
 
     assert_eq!(m, Zero::zero());
